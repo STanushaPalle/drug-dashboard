@@ -12,7 +12,7 @@ from sklearn.cluster import KMeans
 from dotenv import load_dotenv
 
 # Optional LLM
-import openai
+# import openai
 
 load_dotenv()  # loads .env if present
 
@@ -33,22 +33,34 @@ def encode_drug_cols(df, drug_cols):
     df_enc[drug_cols] = df_enc[drug_cols].replace(mapping)
     return df_enc
 
-# Simple LLM wrapper (OpenAI ChatCompletion)
-def llm_analyze(prompt: str, engine="gpt-4o-mini", max_tokens=400):
-    # The user must provide OPENAI_API_KEY in environment or .env
-    key = os.getenv("OPENAI_API_KEY")
+# Simple LLM wrapper (OpenAI Chat API, new SDK)
+# --- Groq LLM wrapper ---
+from groq import Groq
+
+def llm_analyze(prompt: str, engine="llama3-8b-8192", max_tokens=400):
+    key = os.getenv("GROQ_API_KEY")   # ✅ keep environment-based key
     if not key:
-        return "OPENAI_API_KEY not set. Set it as environment variable or in a .env file."
-    openai.api_key = key
+        return "GROQ_API_KEY not set. Set it as environment variable or in a .env file."
     try:
-        # Using OpenAI ChatCompletion (adjust to your installed SDK version)
-        resp = openai.ChatCompletion.create(
-            model="gpt-4o-mini",  # change to model you have access to
-            messages=[{"role":"user","content":prompt}],
+        client = Groq(api_key=key)
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful data analyst specializing in drug consumption patterns."
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model=engine,              # default = llama3-8b-8192
+            temperature=0.5,
             max_tokens=max_tokens,
-            temperature=0.2
+            top_p=1,
+            stream=False,
         )
-        return resp.choices[0].message.content.strip()
+        return chat_completion.choices[0].message.content.strip()
     except Exception as e:
         return f"LLM call error: {e}"
 
@@ -198,8 +210,9 @@ elif page == "LLM Insights":
         prompt = f"{context}\n\nUser question:\n{user_q}\n\nAnswer concisely and in bullet points."
         with st.spinner("Querying LLM..."):
             reply = llm_analyze(prompt, max_tokens=max_tokens)
+        formatted_text = reply.replace("•", "\n•")
         st.markdown("**LLM Response**")
-        st.write(reply)
+        st.write(formatted_text)
 
 # --- Page: Export ---
 elif page == "Export":
