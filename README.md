@@ -3,6 +3,7 @@
 A quick-start guide for setting up and running the Drug Consumption dashboard using Streamlit.
 
 **Repository:** [https://github.com/STanushaPalle/drug-dashboard](https://github.com/STanushaPalle/drug-dashboard)
+**Dataset:** [https://www.kaggle.com/datasets/obeykhadija/drug-consumptions-uci](https://www.kaggle.com/datasets/obeykhadija/drug-consumptions-uci)
 
 ---
 
